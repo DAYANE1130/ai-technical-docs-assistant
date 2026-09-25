@@ -1,0 +1,85 @@
+version: '3.8'
+
+services:
+
+  postgres:
+    image: postgres:16
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - rede_ia
+    ports:
+      - "5433:5432"
+
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - "8080:8080"
+    networks:
+      - rede_ia
+
+  openwebui:
+    image: ghcr.io/open-webui/open-webui:main
+    container_name: openwebui
+    ports:
+      - "3000:8080"
+    volumes:
+      - openwebui_data:/app/backend/data
+    networks:
+      - rede_ia
+    restart: always
+  
+  
+# --- SERVIDOR MCP NOTION ---
+  mcp-notion:
+    image: node:20-slim
+    container_name: mcp-notion
+    restart: always
+    environment:
+    - NOTION_TOKEN=${NOTION_TOKEN}
+    - AUTH_TOKEN=${MCP_AUTH_TOKEN}
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+    - >
+      npm install -g @notionhq/notion-mcp-server &&
+      notion-mcp-server --transport http --host 0.0.0.0 --port 8000
+    networks:
+    - rede_ia
+    ports:
+    - "8000:8000"
+
+
+  langflow:
+    image: langflowai/langflow:1.9.3
+    restart: always
+    ports:
+      - "7860:7860"
+    environment:
+      - LANGFLOW_DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      - LANGFLOW_API_KEY=${LANGFLOW_API_KEY}
+      - LANGFLOW_SKIP_AUTH_AUTO_LOGIN=true
+      - LANGFLOW_FALLBACK_TO_ENV_VAR=True
+      - LANGFLOW_VARIABLES_TO_GET_FROM_ENVIRONMENT=GOOGLE_API_KEY,NOTION_TOKEN
+      - GOOGLE_API_KEY=${GEMINI_API_KEY}
+    volumes:
+      - ./langflow_data:/app/langflow
+    networks:
+      - rede_ia
+    depends_on:
+      - postgres
+      - mcp-notion
+
+volumes:
+  postgres_data:
+  langflow_data:
+  openwebui_data:
+
+networks:
+  rede_ia:
+  
