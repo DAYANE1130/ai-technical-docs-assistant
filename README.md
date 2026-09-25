@@ -1,7 +1,7 @@
 # ai-technical-docs-assistant
 Claro. Vou deixar o GIF logo no início e manter o README objetivo, voltado para apresentar o MVP e permitir que outra pessoa entenda e reproduza o projeto.
 
-````markdown
+
 # AI Technical Docs Assistant
 
 Assistente de IA para consulta de documentação técnica, utilizando Langflow, MCP e Notion.
